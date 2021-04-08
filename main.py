@@ -1,3 +1,6 @@
+from unittest.mock import inplace
+
+import numpy as np
 import requests
 from bs4 import BeautifulSoup
 from bs4 import Comment
@@ -46,14 +49,22 @@ def drop_rows_heeaders(df):
 # Función para eliminar las columnas de las estadísticas básicas que no nos interesan
 def drop_columns_basic_stats(df_stats_base):
 
+    # Nos quedamos con los valores de ambas columnas para renombrarlas después
+    col_gls = df_stats_base['Por 90 Minutos']['Gls.']
+    col_gls_90 = df_stats_base['Por 90 Minutos']['Gls.']
+
     df_stats_base.columns = [col[1] for col in df_stats_base.columns]
 
+    df_stats_base.drop('Gls.', axis=1, inplace=True)
     df_stats_base.drop('xG', axis=1, inplace=True)
     df_stats_base.drop('npxG', axis=1, inplace=True)
     df_stats_base.drop('xA', axis=1, inplace=True)
     df_stats_base.drop('npxG+xA', axis=1, inplace=True)
     df_stats_base.drop('xG+xA', axis=1, inplace=True)
     df_stats_base.drop('Partidos', axis=1, inplace=True)
+
+    df_stats_base['Gls.'] = col_gls
+    df_stats_base['Gls/90'] = col_gls_90
 
     return df_stats_base
 
@@ -65,6 +76,8 @@ def drop_columns_shoot_stats(df_stats_shoot):
 
     df_stats_shoot = drop_generic_columns(df_stats_shoot)
     df_stats_shoot.drop('Gls.', axis=1, inplace=True)
+    df_stats_shoot.drop('TP', axis=1, inplace=True)
+    df_stats_shoot.drop('TPint', axis=1, inplace=True)
     df_stats_shoot.drop('xG', axis=1, inplace=True)
     df_stats_shoot.drop('npxG', axis=1, inplace=True)
     df_stats_shoot.drop('npxG/Sh', axis=1, inplace=True)
@@ -73,6 +86,17 @@ def drop_columns_shoot_stats(df_stats_shoot):
 
     return df_stats_shoot
 
+
+def drop_columns_misc_stats(df_stats_misc):
+
+    df_stats_misc.drop('RL', axis=1, inplace=True)
+    df_stats_misc.drop('TA', axis=1, inplace=True)
+    df_stats_misc.drop('TR', axis=1, inplace=True)
+    df_stats_misc.drop('Pcz', axis=1, inplace=True)
+    df_stats_misc.drop('TklG', axis=1, inplace=True)
+    df_stats_misc.drop('Penal ejecutado', axis=1, inplace=True)
+
+    return df_stats_misc
 
 def modify_country_age(df_stats_base):
 
@@ -102,6 +126,8 @@ def get_stats_base():
     # Eliminamos las cabeceras que aparecen cada X filas
     df_stats_base = drop_rows_heeaders(df_stats_base)
 
+
+
     return df_stats_base
 
 
@@ -121,6 +147,13 @@ def get_stats_shoot():
     df_stats_shoot = drop_rows_heeaders(df_stats_shoot)
     df_stats_shoot.drop('RL', axis=1, inplace=True)
 
+    df_stats_shoot['Dist'].replace(np.nan,'0',inplace=True)
+
+    # Transformamos la distancia del chute de yardas a metros
+    df_stats_shoot['Dist'] = (pd.to_numeric(df_stats_shoot['Dist'])/1.0936).map('{:,.2f}'.format)
+
+    #df_stats_shoot[df_stats_shoot['Dist'].isnull()].replace(np.nan,00.00, inplace=True)
+
     return df_stats_shoot
 
 
@@ -139,7 +172,7 @@ def get_stats_misc():
 
     df_stats_misc = drop_rows_heeaders(df_stats_misc)
 
-    df_stats_misc.drop('RL', axis=1, inplace=True)
+    df_stats_misc = drop_columns_misc_stats(df_stats_misc)
 
     return df_stats_misc
 
