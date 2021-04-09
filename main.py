@@ -152,8 +152,6 @@ def get_stats_shoot():
     # Transformamos la distancia del chute de yardas a metros
     df_stats_shoot['Dist'] = (pd.to_numeric(df_stats_shoot['Dist'])/1.0936).map('{:,.2f}'.format)
 
-    #df_stats_shoot[df_stats_shoot['Dist'].isnull()].replace(np.nan,00.00, inplace=True)
-
     return df_stats_shoot
 
 
